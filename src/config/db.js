@@ -9,8 +9,13 @@ if(!process.env.JWT_SECRET){
     throw new Error("JWT_SECRET is not defined");
 }
 
+if(!process.env.REFRESH_TOKEN_SECRET){
+    throw new Error("REFRESH_TOKEN_SECRET is not defined");
+}
+
 const config = {
     JWT_SECRET: process.env.JWT_SECRET,
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
     PORT: process.env.PORT,
     DATABASE_URL: process.env.DATABASE_URL
 }
