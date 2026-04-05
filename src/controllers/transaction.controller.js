@@ -1,7 +1,7 @@
 import prisma from "../config/db.js";
 
 // ==================== CREATE TRANSACTION ====================
-// Access: ADMIN only
+// Access: All Authenticated Users (Hybrid: Option C)
 export async function createTransaction(req, res) {
     try {
         const { amount, type, category, date, description } = req.body;
@@ -21,7 +21,7 @@ export async function createTransaction(req, res) {
                 category,
                 date: date ? new Date(date) : undefined,
                 description,
-                userId: req.user.id, // Record which admin created this
+                userId: req.user.id, // Record the creator
             },
         });
 
@@ -36,13 +36,13 @@ export async function createTransaction(req, res) {
 }
 
 // ==================== LIST TRANSACTIONS ====================
-// Access: VIEWER, ANALYST, ADMIN
+// Access: All Authenticated Users (Hybrid: Option C)
 export async function getTransactions(req, res) {
     try {
         const { type, category, startDate, endDate, page = 1, limit = 10 } = req.query;
 
-        // Build filter object
-        const where = {};
+        // Build filter object (Analysts/Admins see all)
+        const where = req.user.role === "VIEWER" ? { userId: req.user.id } : {};
 
         if (type) {
             where.type = type.toUpperCase();
@@ -89,7 +89,7 @@ export async function getTransactions(req, res) {
 }
 
 // ==================== GET SINGLE TRANSACTION ====================
-// Access: VIEWER, ANALYST, ADMIN
+// Access: All Authenticated Users (Hybrid: Option C)
 export async function getTransactionById(req, res) {
     try {
         const id = parseInt(req.params.id);
@@ -98,8 +98,11 @@ export async function getTransactionById(req, res) {
             return res.status(400).json({ message: "Invalid transaction ID" });
         }
 
-        const transaction = await prisma.transaction.findUnique({
-            where: { id },
+        const where = req.user.role === "VIEWER" ? { id, userId: req.user.id } : { id };
+
+        // Use findFirst to handle both roles safely
+        const transaction = await prisma.transaction.findFirst({
+            where,
             include: {
                 user: { select: { name: true, email: true } },
             },
@@ -117,9 +120,14 @@ export async function getTransactionById(req, res) {
 }
 
 // ==================== UPDATE TRANSACTION ====================
-// Access: ADMIN only
+// Access: VIEWERS (own), ADMIN (any), ANALYSTS (Blocked - Option C)
 export async function updateTransaction(req, res) {
     try {
+        // Analysts are Read-Only!
+        if (req.user.role === "ANALYST") {
+            return res.status(403).json({ message: "Analysts have read-only access." });
+        }
+
         const id = parseInt(req.params.id);
         const { amount, type, category, date, description } = req.body;
 
@@ -131,6 +139,15 @@ export async function updateTransaction(req, res) {
             return res.status(400).json({ message: "Type must be INCOME or EXPENSE" });
         }
 
+        const where = req.user.role === "VIEWER" ? { id, userId: req.user.id } : { id };
+
+        // Verify existence/ownership before updating
+        const existingTx = await prisma.transaction.findFirst({ where });
+
+        if (!existingTx) {
+            return res.status(404).json({ message: "Transaction not found or access denied" });
+        }
+
         const transaction = await prisma.transaction.update({
             where: { id },
             data: {
@@ -139,8 +156,6 @@ export async function updateTransaction(req, res) {
                 category,
                 date: date ? new Date(date) : undefined,
                 description,
-                // optionally update the userId to track who modified it last:
-                userId: req.user.id,
             },
         });
 
@@ -158,18 +173,28 @@ export async function updateTransaction(req, res) {
 }
 
 // ==================== DELETE TRANSACTION ====================
-// Access: ADMIN only
+// Access: VIEWERS (own), ADMIN (any), ANALYSTS (Blocked - Option C)
 export async function deleteTransaction(req, res) {
     try {
+        // Analysts are Read-Only!
+        if (req.user.role === "ANALYST") {
+            return res.status(403).json({ message: "Analysts have read-only access." });
+        }
+
         const id = parseInt(req.params.id);
 
         if (isNaN(id)) {
             return res.status(400).json({ message: "Invalid transaction ID" });
         }
 
-        await prisma.transaction.delete({
-            where: { id },
-        });
+        const where = req.user.role === "VIEWER" ? { id, userId: req.user.id } : { id };
+
+        // Use deleteMany to safely enforce ownership/existence
+        const deleted = await prisma.transaction.deleteMany({ where });
+
+        if (deleted.count === 0) {
+            return res.status(404).json({ message: "Transaction not found or access denied" });
+        }
 
         return res.status(200).json({ message: "Transaction deleted successfully" });
     } catch (error) {

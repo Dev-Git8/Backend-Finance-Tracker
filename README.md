@@ -19,10 +19,10 @@ A robust, role-based backend API for managing financial records, tracking user a
 - Automatically handles token management via secure `HttpOnly` cookies strictly bound to the environment.
 
 ### 2. Comprehensive Role-Based Access Control (RBAC)
-Custom authorization middleware strictly controls access across three distinct user roles:
-- **VIEWER:** Can only read their own profile, view public dashboard summaries, and view available transactions.
-- **ANALYST:** Inherits VIEWER permissions but can also view advanced data aggregations (category summaries, trends).
-- **ADMIN:** Granted complete, system-wide access. Only Admins can modify transaction details, edit user roles, or change the account statuses of other members.
+A Hybrid Data Isolation model dynamically controls access and permissions across three distinct user roles:
+- **VIEWER:** Strictly fenced into their own data. They can Create, Read, Update, and Delete only their own personal transactions and view their own personal dashboard summaries.
+- **ANALYST:** Holds "Platform-Wide Read Access" to view and analyze massive aggregated trends and transactions across the entire application, but is strictly blocked from making destructive edits (Read-Only mode).
+- **ADMIN:** Granted complete, system-wide access. Admins can read, update, and delete any transaction in the system, and are the only role allowed to manage user accounts.
 
 ### 3. Financial Transaction Ledger
 - Complete CRUD system for managing incoming and outgoing financial transactions.
@@ -121,14 +121,16 @@ Tests:       14 passed, 14 total
 - `PATCH /:id/status`
 
 ### Transactions (`/api/transactions`) 
-- `GET /` — Read/Filter *(VIEWER, ANALYST, ADMIN)*
-- `GET /:id` — Read One *(VIEWER, ANALYST, ADMIN)*
-- `POST /` — Create *(ADMIN)*
-- `PUT /:id` — Update *(ADMIN)*
-- `DELETE /:id` — Delete *(ADMIN)*
+*(Note: Viewers read/write their own data. Analysts read all. Admins read/write all).*
+- `GET /` — Read/Filter list of transactions
+- `GET /:id` — Read single transaction
+- `POST /` — Create a transaction
+- `PUT /:id` — Update a transaction *(Blocked for ANALYST)*
+- `DELETE /:id` — Delete a transaction *(Blocked for ANALYST)*
 
 ### Dashboard (`/api/dashboard`) 
-- `GET /summary` — Income vs Expense totals *(VIEWER, ANALYST, ADMIN)*
-- `GET /recent` — Last 5 transactions *(VIEWER, ANALYST, ADMIN)*
-- `GET /category-summary` — Totals grouped by Category *(ANALYST, ADMIN)*
-- `GET /trends` — Month-by-month tracking *(ANALYST, ADMIN)*
+*(Note: Viewers receive their isolated personal dashboard. Analysts/Admins receive the global platform dashboard).*
+- `GET /summary` — Income vs Expense totals
+- `GET /recent` — Last 5 transactions
+- `GET /category-summary` — Totals grouped by Category
+- `GET /trends` — Month-by-month tracking

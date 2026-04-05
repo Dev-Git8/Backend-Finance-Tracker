@@ -72,11 +72,11 @@ export async function register(req, res) {
         });
 
         // Set cookies
-        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
         res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
         return res.status(201).json({
             message: "User registered successfully",
+            accessToken,
             user: {
                 id: user.id,
                 name: user.name,
@@ -133,11 +133,11 @@ export async function login(req, res) {
         });
 
         // Set cookies
-        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
         res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
         return res.status(200).json({
             message: "User logged in successfully",
+            accessToken,
             user: {
                 id: user.id,
                 name: user.name,
@@ -181,9 +181,10 @@ export async function refreshAccessToken(req, res) {
         // Generate new access token
         const newAccessToken = generateAccessToken(decoded.id);
 
-        res.cookie("accessToken", newAccessToken, accessTokenCookieOptions);
-
-        return res.status(200).json({ message: "Access token refreshed successfully" });
+        return res.status(200).json({ 
+            message: "Access token refreshed successfully",
+            accessToken: newAccessToken
+        });
     } catch (error) {
         console.error("Refresh token error:", error);
         if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
@@ -205,8 +206,7 @@ export async function logout(req, res) {
             });
         }
 
-        // Clear both cookies
-        res.clearCookie("accessToken", accessTokenCookieOptions);
+        // Clear refresh cookie
         res.clearCookie("refreshToken", refreshTokenCookieOptions);
 
         return res.status(200).json({ message: "Logged out successfully" });

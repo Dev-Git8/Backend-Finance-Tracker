@@ -1,18 +1,20 @@
 import prisma from "../config/db.js";
 
 // ==================== GET SUMMARY ====================
-// Access: VIEWER, ANALYST, ADMIN
+// Access: All Authenticated Users (Option B)
 export async function getSummary(req, res) {
     try {
+        const baseWhere = req.user.role === "VIEWER" ? { userId: req.user.id } : {};
+
         // Aggregate totals natively through Prisma/PostgreSQL
         const incomeResult = await prisma.transaction.aggregate({
             _sum: { amount: true },
-            where: { type: "INCOME" },
+            where: { type: "INCOME", ...baseWhere },
         });
 
         const expenseResult = await prisma.transaction.aggregate({
             _sum: { amount: true },
-            where: { type: "EXPENSE" },
+            where: { type: "EXPENSE", ...baseWhere },
         });
 
         const totalIncome = incomeResult._sum.amount || 0;
@@ -33,12 +35,12 @@ export async function getSummary(req, res) {
 }
 
 // ==================== GET CATEGORY SUMMARY ====================
-// Access: ANALYST, ADMIN
+// Access: All Authenticated Users (Option B)
 export async function getCategorySummary(req, res) {
     try {
         const { type } = req.query; // optional filter by INCOME or EXPENSE
 
-        const where = {};
+        const where = req.user.role === "VIEWER" ? { userId: req.user.id } : {};
         if (type) {
             if (!["INCOME", "EXPENSE"].includes(type.toUpperCase())) {
                 return res.status(400).json({ message: "Type must be INCOME or EXPENSE" });
@@ -69,7 +71,7 @@ export async function getCategorySummary(req, res) {
 }
 
 // ==================== GET TRENDS ====================
-// Access: ANALYST, ADMIN
+// Access: All Authenticated Users (Option B)
 export async function getTrends(req, res) {
     try {
         // PostgreSql specific - fetch all transactions and process in memory is simplest
@@ -78,8 +80,11 @@ export async function getTrends(req, res) {
         const currentYear = new Date().getFullYear();
         const startOfYear = new Date(`${currentYear}-01-01T00:00:00.000Z`);
         
+        const baseWhere = req.user.role === "VIEWER" ? { userId: req.user.id } : {};
+        
         const transactionsThisYear = await prisma.transaction.findMany({
             where: {
+                ...baseWhere,
                 date: {
                     gte: startOfYear
                 }
@@ -126,12 +131,15 @@ export async function getTrends(req, res) {
 }
 
 // ==================== GET RECENT TRANSACTIONS ====================
-// Access: VIEWER, ANALYST, ADMIN
+// Access: All Authenticated Users (Option B)
 export async function getRecentTransactions(req, res) {
     try {
         const limit = parseInt(req.query.limit) || 5;
 
+        const where = req.user.role === "VIEWER" ? { userId: req.user.id } : {};
+
         const recent = await prisma.transaction.findMany({
+            where,
             take: limit,
             orderBy: { date: "desc" },
             include: { user: { select: { name: true } } },

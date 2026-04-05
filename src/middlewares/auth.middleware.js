@@ -4,8 +4,9 @@ import { config } from "../config/db.js";
 
 export async function authMiddleware(req, res, next) {
     try {
-        // Read access token from cookie
-        const token = req.cookies.accessToken;
+        // Read access token from Authorization header
+        const authHeader = req.headers.authorization || req.headers.Authorization;
+        const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
 
         if (!token) {
             return res.status(401).json({ message: "Access denied. No token provided." });

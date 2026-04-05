@@ -5,39 +5,19 @@ import {
     getTrends,
     getRecentTransactions,
 } from "../controllers/dashboard.controller.js";
-import { authMiddleware, authorizeRoles } from "../middlewares/auth.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const dashboardRouter = Router();
 
-// All routes require authentication
+// Option B: Maximum Privacy
+// ALL routes strictly require authentication, but DO NOT require specific roles.
+// The controllers will enforce that every user can only view their OWN dashboard data.
 dashboardRouter.use(authMiddleware);
 
-// ==================== DASHBOARD ROUTES ====================
-
-// VIEWER, ANALYST, ADMIN
-dashboardRouter.get(
-    "/summary",
-    authorizeRoles("VIEWER", "ANALYST", "ADMIN"),
-    getSummary
-);
-
-dashboardRouter.get(
-    "/recent",
-    authorizeRoles("VIEWER", "ANALYST", "ADMIN"),
-    getRecentTransactions
-);
-
-// ANALYST, ADMIN only (more advanced insights)
-dashboardRouter.get(
-    "/category-summary",
-    authorizeRoles("ANALYST", "ADMIN"),
-    getCategorySummary
-);
-
-dashboardRouter.get(
-    "/trends",
-    authorizeRoles("ANALYST", "ADMIN"),
-    getTrends
-);
+// --- Dashboard Insights ---
+dashboardRouter.get("/summary", getSummary);
+dashboardRouter.get("/recent", getRecentTransactions);
+dashboardRouter.get("/category-summary", getCategorySummary);
+dashboardRouter.get("/trends", getTrends);
 
 export default dashboardRouter;
