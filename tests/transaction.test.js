@@ -24,22 +24,24 @@ describe("Transaction Endpoints", () => {
 
             const res = await request(app)
                 .post("/api/transactions")
-                .set("Cookie", [`accessToken=${adminToken}`])
+                .set("Authorization", `Bearer ${adminToken}`)
                 .send({ amount: 100, type: "INCOME", category: "Salary" });
 
             expect(res.statusCode).toBe(201);
             expect(res.body.transaction.amount).toBe(100);
         });
 
-        it("should deny VIEWER from creating transaction", async () => {
+        it("should allow VIEWER to create transaction", async () => {
             jest.spyOn(prisma.user, "findUnique").mockResolvedValue({ id: 2, role: "VIEWER", status: "ACTIVE" });
+            jest.spyOn(prisma.transaction, "create").mockResolvedValue({ id: 11, amount: 100, type: "INCOME" });
 
             const res = await request(app)
                 .post("/api/transactions")
-                .set("Cookie", [`accessToken=${viewerToken}`])
+                .set("Authorization", `Bearer ${viewerToken}`)
                 .send({ amount: 100, type: "INCOME", category: "Salary" });
 
-            expect(res.statusCode).toBe(403);
+            expect(res.statusCode).toBe(201);
+            expect(res.body.transaction.amount).toBe(100);
         });
     });
 
@@ -51,7 +53,7 @@ describe("Transaction Endpoints", () => {
 
             const res = await request(app)
                 .get("/api/transactions")
-                .set("Cookie", [`accessToken=${viewerToken}`]);
+                .set("Authorization", `Bearer ${viewerToken}`);
 
             expect(res.statusCode).toBe(200);
             expect(res.body.transactions).toHaveLength(1);

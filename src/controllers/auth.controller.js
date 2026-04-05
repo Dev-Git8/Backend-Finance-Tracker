@@ -28,6 +28,38 @@ function generateRefreshToken(userId) {
     return jwt.sign({ id: userId }, config.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
 }
 
+// Helper: Master Token & Session Generator
+async function generateAuthResponse(user, req, res, statusCode, message) {
+    // Generate tokens
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    // Store refresh token in Session table
+    await prisma.session.create({
+        data: {
+            userId: user.id,
+            refreshToken,
+            userAgent: req.headers["user-agent"] || null,
+            ipAddress: req.ip || null,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        },
+    });
+
+    // Set cookies
+    res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+
+    return res.status(statusCode).json({
+        message,
+        accessToken,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        },
+    });
+}
+
 // ==================== REGISTER ====================
 export async function register(req, res) {
     try {
@@ -56,34 +88,8 @@ export async function register(req, res) {
             },
         });
 
-        // Generate tokens
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
-
-        // Store refresh token in Session table
-        await prisma.session.create({
-            data: {
-                userId: user.id,
-                refreshToken,
-                userAgent: req.headers["user-agent"] || null,
-                ipAddress: req.ip || null,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-            },
-        });
-
-        // Set cookies
-        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
-
-        return res.status(201).json({
-            message: "User registered successfully",
-            accessToken,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-            },
-        });
+        // Automatically generate session, tokens, and return response
+        return await generateAuthResponse(user, req, res, 201, "User registered successfully");
     } catch (error) {
         console.error("Registration error:", error);
         return res.status(500).json({ message: "Internal server error" });
@@ -117,34 +123,8 @@ export async function login(req, res) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        // Generate tokens
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
-
-        // Store refresh token in Session table
-        await prisma.session.create({
-            data: {
-                userId: user.id,
-                refreshToken,
-                userAgent: req.headers["user-agent"] || null,
-                ipAddress: req.ip || null,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            },
-        });
-
-        // Set cookies
-        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
-
-        return res.status(200).json({
-            message: "User logged in successfully",
-            accessToken,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-            },
-        });
+        // Automatically generate session, tokens, and return response
+        return await generateAuthResponse(user, req, res, 200, "User logged in successfully");
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "Internal server error" });

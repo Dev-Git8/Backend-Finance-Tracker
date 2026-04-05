@@ -77,7 +77,7 @@ describe("Auth Endpoints", () => {
 
             const res = await request(app)
                 .get("/api/auth/get-me")
-                .set("Cookie", [`accessToken=${token}`]);
+                .set("Authorization", `Bearer ${token}`);
 
             expect(res.statusCode).toBe(200);
             expect(res.body.user.email).toBe("test@example.com");

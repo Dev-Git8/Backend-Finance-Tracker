@@ -25,7 +25,7 @@ describe("User Endpoints", () => {
 
             const res = await request(app)
                 .get("/api/users")
-                .set("Cookie", [`accessToken=${adminToken}`]);
+                .set("Authorization", `Bearer ${adminToken}`);
 
             expect(res.statusCode).toBe(200);
             expect(res.body.users).toHaveLength(1);
@@ -36,7 +36,7 @@ describe("User Endpoints", () => {
 
             const res = await request(app)
                 .get("/api/users")
-                .set("Cookie", [`accessToken=${viewerToken}`]);
+                .set("Authorization", `Bearer ${viewerToken}`);
 
             expect(res.statusCode).toBe(403);
         });
@@ -49,7 +49,7 @@ describe("User Endpoints", () => {
 
             const res = await request(app)
                 .patch("/api/users/3/role")
-                .set("Cookie", [`accessToken=${adminToken}`])
+                .set("Authorization", `Bearer ${adminToken}`)
                 .send({ role: "ANALYST" });
 
             expect(res.statusCode).toBe(200);

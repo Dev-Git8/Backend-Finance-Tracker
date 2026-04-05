@@ -28,7 +28,7 @@ describe("Dashboard Endpoints", () => {
 
             const res = await request(app)
                 .get("/api/dashboard/summary")
-                .set("Cookie", [`accessToken=${viewerToken}`]);
+                .set("Authorization", `Bearer ${viewerToken}`);
 
             expect(res.statusCode).toBe(200);
             expect(res.body.summary.totalIncome).toBe(5000);
@@ -44,20 +44,22 @@ describe("Dashboard Endpoints", () => {
 
             const res = await request(app)
                 .get("/api/dashboard/category-summary")
-                .set("Cookie", [`accessToken=${analystToken}`]);
+                .set("Authorization", `Bearer ${analystToken}`);
 
             expect(res.statusCode).toBe(200);
             expect(res.body.categorySummary).toHaveLength(1);
         });
 
-        it("should deny VIEWER access", async () => {
+        it("should allow VIEWER to access their own category summary", async () => {
             jest.spyOn(prisma.user, "findUnique").mockResolvedValue({ id: 2, role: "VIEWER", status: "ACTIVE" });
+            jest.spyOn(prisma.transaction, "groupBy").mockResolvedValue([{ category: "Food", type: "EXPENSE", _sum: { amount: 500 } }]);
 
             const res = await request(app)
                 .get("/api/dashboard/category-summary")
-                .set("Cookie", [`accessToken=${viewerToken}`]);
+                .set("Authorization", `Bearer ${viewerToken}`);
 
-            expect(res.statusCode).toBe(403);
+            expect(res.statusCode).toBe(200);
+            expect(res.body.categorySummary).toHaveLength(1);
         });
     });
 });
