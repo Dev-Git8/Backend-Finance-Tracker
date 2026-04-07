@@ -1,7 +1,6 @@
 import prisma from "../config/db.js";
 
-// ==================== CREATE TRANSACTION ====================
-// Access: All Authenticated Users (Hybrid: Option C)
+
 export async function createTransaction(req, res) {
     try {
         const { amount, type, category, date, description } = req.body;
@@ -35,8 +34,7 @@ export async function createTransaction(req, res) {
     }
 }
 
-// ==================== LIST TRANSACTIONS ====================
-// Access: All Authenticated Users (Hybrid: Option C)
+
 export async function getTransactions(req, res) {
     try {
         const { type, category, startDate, endDate, page = 1, limit = 10 } = req.query;
@@ -88,8 +86,7 @@ export async function getTransactions(req, res) {
     }
 }
 
-// ==================== GET SINGLE TRANSACTION ====================
-// Access: All Authenticated Users (Hybrid: Option C)
+
 export async function getTransactionById(req, res) {
     try {
         const id = parseInt(req.params.id);
@@ -119,8 +116,7 @@ export async function getTransactionById(req, res) {
     }
 }
 
-// ==================== UPDATE TRANSACTION ====================
-// Access: VIEWERS (own), ADMIN (any), ANALYSTS (Blocked - Option C)
+
 export async function updateTransaction(req, res) {
     try {
         // Analysts are Read-Only!
@@ -172,8 +168,6 @@ export async function updateTransaction(req, res) {
     }
 }
 
-// ==================== DELETE TRANSACTION ====================
-// Access: VIEWERS (own), ADMIN (any), ANALYSTS (Blocked - Option C)
 export async function deleteTransaction(req, res) {
     try {
         // Analysts are Read-Only!

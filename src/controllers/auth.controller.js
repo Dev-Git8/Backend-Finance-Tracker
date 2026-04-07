@@ -19,7 +19,7 @@ const refreshTokenCookieOptions = {
     path: "/api/auth", // only sent to auth routes
 };
 
-// Helper: generate tokens
+// generate tokens
 function generateAccessToken(userId) {
     return jwt.sign({ id: userId }, config.JWT_SECRET, { expiresIn: "15m" });
 }
@@ -28,7 +28,7 @@ function generateRefreshToken(userId) {
     return jwt.sign({ id: userId }, config.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
 }
 
-// Helper: Master Token & Session Generator
+// Master Token & Session Generator
 async function generateAuthResponse(user, req, res, statusCode, message) {
     // Generate tokens
     const accessToken = generateAccessToken(user.id);
@@ -60,7 +60,7 @@ async function generateAuthResponse(user, req, res, statusCode, message) {
     });
 }
 
-// ==================== REGISTER ====================
+
 export async function register(req, res) {
     try {
         const { name, email, password } = req.body;
@@ -88,7 +88,7 @@ export async function register(req, res) {
             },
         });
 
-        // Automatically generate session, tokens, and return response
+        
         return await generateAuthResponse(user, req, res, 201, "User registered successfully");
     } catch (error) {
         console.error("Registration error:", error);
@@ -96,7 +96,7 @@ export async function register(req, res) {
     }
 }
 
-// ==================== LOGIN ====================
+
 export async function login(req, res) {
     try {
         const { email, password } = req.body;
@@ -123,7 +123,7 @@ export async function login(req, res) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        // Automatically generate session, tokens, and return response
+        
         return await generateAuthResponse(user, req, res, 200, "User logged in successfully");
     } catch (error) {
         console.error("Login error:", error);
@@ -131,7 +131,6 @@ export async function login(req, res) {
     }
 }
 
-// ==================== REFRESH TOKEN ====================
 export async function refreshAccessToken(req, res) {
     try {
         const token = req.cookies.refreshToken;
@@ -174,7 +173,7 @@ export async function refreshAccessToken(req, res) {
     }
 }
 
-// ==================== LOGOUT ====================
+
 export async function logout(req, res) {
     try {
         const token = req.cookies.refreshToken;
@@ -196,7 +195,7 @@ export async function logout(req, res) {
     }
 }
 
-// ==================== GET ME ====================
+
 export async function getme(req, res) {
     return res.status(200).json({ user: req.user });
 }

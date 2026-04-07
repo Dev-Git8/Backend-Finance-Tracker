@@ -1,7 +1,6 @@
 import prisma from "../config/db.js";
 
-// ==================== GET SUMMARY ====================
-// Access: All Authenticated Users (Option B)
+
 export async function getSummary(req, res) {
     try {
         const baseWhere = req.user.role === "VIEWER" ? { userId: req.user.id } : {};
@@ -34,8 +33,7 @@ export async function getSummary(req, res) {
     }
 }
 
-// ==================== GET CATEGORY SUMMARY ====================
-// Access: All Authenticated Users (Option B)
+
 export async function getCategorySummary(req, res) {
     try {
         const { type } = req.query; // optional filter by INCOME or EXPENSE
@@ -70,12 +68,10 @@ export async function getCategorySummary(req, res) {
     }
 }
 
-// ==================== GET TRENDS ====================
-// Access: All Authenticated Users (Option B)
+
 export async function getTrends(req, res) {
     try {
-        // PostgreSql specific - fetch all transactions and process in memory is simplest
-        // for generic use case. Alternatively, raw SQL query can be written for DATE_TRUNC.
+       
         
         const currentYear = new Date().getFullYear();
         const startOfYear = new Date(`${currentYear}-01-01T00:00:00.000Z`);
@@ -130,8 +126,7 @@ export async function getTrends(req, res) {
     }
 }
 
-// ==================== GET RECENT TRANSACTIONS ====================
-// Access: All Authenticated Users (Option B)
+
 export async function getRecentTransactions(req, res) {
     try {
         const limit = parseInt(req.query.limit) || 5;

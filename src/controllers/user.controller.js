@@ -1,7 +1,6 @@
 import prisma from "../config/db.js";
 
-// ==================== LIST USERS ====================
-// Only ADMIN can access
+
 export async function getUsers(req, res) {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -39,8 +38,7 @@ export async function getUsers(req, res) {
     }
 }
 
-// ==================== GET SINGLE USER ====================
-// Only ADMIN can access
+
 export async function getUserById(req, res) {
     try {
         const userId = parseInt(req.params.id);
@@ -73,8 +71,7 @@ export async function getUserById(req, res) {
     }
 }
 
-// ==================== UPDATE USER ROLE ====================
-// Only ADMIN can access
+
 export async function updateUserRole(req, res) {
     try {
         const userId = parseInt(req.params.id);
@@ -117,8 +114,7 @@ export async function updateUserRole(req, res) {
     }
 }
 
-// ==================== UPDATE USER STATUS ====================
-// Only ADMIN can access
+
 export async function updateUserStatus(req, res) {
     try {
         const userId = parseInt(req.params.id);
