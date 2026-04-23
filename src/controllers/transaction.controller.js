@@ -120,8 +120,8 @@ export async function getTransactionById(req, res) {
 export async function updateTransaction(req, res) {
     try {
         // Analysts are Read-Only!
-        if (req.user.role === "ANALYST") {
-            return res.status(403).json({ message: "Analysts have read-only access." });
+        if (req.user.role === "ANALYST"  || req.user.role === "ADMIN") {
+            return res.status(403).json({ message: "Admins and Analysts have read-only access" });
         }
 
         const id = parseInt(req.params.id);
@@ -171,8 +171,8 @@ export async function updateTransaction(req, res) {
 export async function deleteTransaction(req, res) {
     try {
         // Analysts are Read-Only!
-        if (req.user.role === "ANALYST") {
-            return res.status(403).json({ message: "Analysts have read-only access." });
+        if (req.user.role === "ANALYST"  || req.user.role === "ADMIN") {
+            return res.status(403).json({ message: "Admins and Analysts have read-only access" });
         }
 
         const id = parseInt(req.params.id);
